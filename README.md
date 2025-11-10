@@ -97,6 +97,48 @@ python scripts/generate_predictions.py --input data/unlabeled_queries.xlsx --col
 
 The script reads the specified column, runs recommendations for each row, and writes JSON-formatted assessment lists to the output CSV.
 
+## Deployment on Render
+
+This project includes a `render.yaml` configuration file for deploying both the backend and frontend services on Render.
+
+### Finding Your URLs
+
+After deploying on Render, you can find your service URLs in the Render dashboard:
+
+1. **Backend URL**: Navigate to your `shl-recommender-backend` service in the Render dashboard. The URL will be displayed at the top (e.g., `https://shl-recommender-backend.onrender.com`)
+2. **Frontend URL**: Navigate to your `shl-recommender-frontend` service. The URL will be displayed at the top (e.g., `https://shl-recommender-frontend.onrender.com`)
+
+### How Render Knows What Commands to Run
+
+The `render.yaml` file specifies the startup commands for each service:
+
+**Backend Service:**
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+  - Uses `$PORT` environment variable provided by Render
+  - Binds to `0.0.0.0` to accept external connections
+
+**Frontend Service:**
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0`
+  - Uses `$PORT` environment variable provided by Render
+  - Binds to `0.0.0.0` to accept external connections
+
+### Environment Variables
+
+The `render.yaml` automatically configures:
+- `RECOMMENDER_API_URL` for the frontend (automatically set to the backend service URL)
+- `CHROMA_PATH` and `EMBEDDINGS_MODEL_NAME` for the backend
+
+You'll need to manually set `LOGFIRE_API_KEY` in the Render dashboard if you want remote logging enabled.
+
+### Deploying
+
+1. Push your code to GitHub/GitLab
+2. In Render dashboard, create a new "Blueprint" and connect your repository
+3. Render will automatically detect `render.yaml` and create both services
+4. After deployment, note the URLs for both services
+
 ## Logs and monitoring
 
 Logging is instrumented with [Logfire](https://logfire.pydantic.dev/). Supply `LOGFIRE_API_KEY` in `.env` to stream structured logs. Without a key, logging remains local.

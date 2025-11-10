@@ -1,0 +1,32 @@
+services:
+  # Backend FastAPI service
+  - type: web
+    name: shl-recommender-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: LOGFIRE_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: CHROMA_PATH
+        value: chroma_db
+      - key: EMBEDDINGS_MODEL_NAME
+        value: sentence-transformers/all-MiniLM-L6-v2
+
+  # Frontend Streamlit service
+  - type: web
+    name: shl-recommender-frontend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: RECOMMENDER_API_URL
+        fromService:
+          type: web
+          name: shl-recommender-backend
+          property: url
+      - key: PYTHON_VERSION
+        value: 3.10.0
+
