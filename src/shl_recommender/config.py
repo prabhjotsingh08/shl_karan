@@ -57,6 +57,11 @@ class Settings(BaseSettings):
         default=3,
         description="Minimum number of assessments per category when a balanced mix is required.",
     )
+    gemini_api_key: Optional[str] = Field(
+        default=None,
+        alias="GEMINI_API_KEY",
+        description="Gemini API key for LLM-based type extraction.",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

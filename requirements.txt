@@ -1,9 +1,11 @@
 beautifulsoup4
 chromadb
 fastapi
+google-generativeai
 logfire
 pandas
 pydantic
+pydantic-ai[gemini]
 pydantic-settings
 python-dotenv
 requests
