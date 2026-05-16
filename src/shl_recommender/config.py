@@ -53,14 +53,30 @@ class Settings(BaseSettings):
         default=10,
         description="Maximum number of assessments returned to clients.",
     )
-    min_category_mix: int = Field(
-        default=3,
-        description="Minimum number of assessments per category when a balanced mix is required.",
-    )
     gemini_api_key: Optional[str] = Field(
         default=None,
         alias="GEMINI_API_KEY",
         description="Gemini API key for LLM-based type extraction.",
+    )
+    max_conversation_turns: int = Field(
+        default=8,
+        description=(
+            "Maximum messages per conversation (user + assistant turns combined), "
+            "per SHL assignment evaluator limits."
+        ),
+    )
+    chat_min_recommendations: int = Field(
+        default=1,
+        description="Minimum recommendations returned in chat mode.",
+    )
+    chat_max_recommendations: int = Field(
+        default=10,
+        description="Maximum recommendations returned in chat mode.",
+    )
+    chat_use_gemini_replies: bool = Field(
+        default=False,
+        alias="CHAT_USE_GEMINI_REPLIES",
+        description="When true and GEMINI_API_KEY is set, polish chat replies with Gemini.",
     )
 
     model_config = SettingsConfigDict(

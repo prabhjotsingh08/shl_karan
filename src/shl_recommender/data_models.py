@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional, Set
+from typing import List, Literal, Optional, Set
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 ASSESSMENT_TYPE_LABELS = {
@@ -86,6 +86,11 @@ class AssessmentMetadata(BaseModel):
     def adaptive_label(self) -> str:
         return _bool_to_label(self.adaptive)
 
+    def test_type_codes(self) -> str:
+        """Comma-separated SHL type codes (e.g. ``K`` or ``K,P``) for /chat responses."""
+        codes = sorted(code.strip().upper() for code in self.assessment_types if code.strip())
+        return ",".join(codes)
+
     def to_recommendation_item(self) -> "RecommendationItem":
         return RecommendationItem(
             name=self.name,
@@ -95,6 +100,13 @@ class AssessmentMetadata(BaseModel):
             remote_support=self.remote_label(),
             adaptive_support=self.adaptive_label(),
             test_type=self.human_readable_types(),
+        )
+
+    def to_chat_recommendation_item(self) -> "ChatRecommendationItem":
+        return ChatRecommendationItem(
+            name=self.name,
+            url=self.url,
+            test_type=self.test_type_codes(),
         )
 
 
@@ -116,9 +128,70 @@ class RecommendationItem(BaseModel):
     test_type: List[str] = Field(default_factory=list)
 
 
+class ExtractedCategory(BaseModel):
+    """Assessment category returned with recommendations."""
+
+    code: str
+    label: str
+
+
 class RecommendationResponse(BaseModel):
     """Response payload for the recommendation API."""
 
     recommended_assessments: List[RecommendationItem] = Field(default_factory=list)
+    extracted_categories: List[ExtractedCategory] = Field(default_factory=list)
+
+
+class ChatMessage(BaseModel):
+    """Single turn in a stateless conversation."""
+
+    role: Literal["user", "assistant"]
+    content: str
+
+    @field_validator("content")
+    @classmethod
+    def content_not_blank(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Message content must not be empty.")
+        return value.strip()
+
+
+class ChatRequest(BaseModel):
+    """Request payload for the conversational chat API."""
+
+    messages: List[ChatMessage] = Field(default_factory=list)
+
+    @field_validator("messages")
+    @classmethod
+    def require_at_least_one_message(cls, value: List[ChatMessage]) -> List[ChatMessage]:
+        if not value:
+            raise ValueError("At least one message is required.")
+        return value
+
+
+class ChatRecommendationItem(BaseModel):
+    """Assessment shortlist item for POST /chat (assignment schema)."""
+
+    name: str
+    url: HttpUrl
+    test_type: str
+
+
+class ChatResponse(BaseModel):
+    """Strict response schema for the conversational chat API."""
+
+    reply: str
+    recommendations: List[ChatRecommendationItem] = Field(default_factory=list)
+    end_of_conversation: bool = False
+
+    @field_validator("recommendations")
+    @classmethod
+    def cap_recommendation_count(
+        cls,
+        value: List[ChatRecommendationItem],
+    ) -> List[ChatRecommendationItem]:
+        if len(value) > 10:
+            return value[:10]
+        return value
 
 

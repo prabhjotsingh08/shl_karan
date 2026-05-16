@@ -1,151 +1,339 @@
-# SHL Assessment Recommendation System
+# SHL Conversational Assessment Recommender
 
-This repository implements a GenAI-powered recommendation system that maps free-form job descriptions to the most relevant SHL individual assessment tests.
+Stateless conversational agent that helps hiring managers move from a vague intent (“I am hiring a Java developer”) to a **grounded shortlist of SHL Individual Test Solutions** from the [SHL product catalog](https://www.shl.com/solutions/products/product-catalog/).
 
-## Features
+Aligned with **SHL_AI_Intern_Assignment.pdf** (SHL Labs AI Intern take-home).
 
-- **Catalog crawler** – scrapes SHL's public catalog for individual assessment metadata and saves it to CSV.
-- **Embedding pipeline** – builds a ChromaDB vector store using `all-MiniLM-L6-v2` embeddings.
-- **Vector similarity ranking** – retrieves top candidates via vector similarity and ranks them by embedding similarity.
-- **Balanced recommendation rule** – ensures technical (`K`) and behavioral (`P`) assessments are both represented when required.
-- **FastAPI backend** – exposes `/health` and `/recommend` endpoints.
-- **Streamlit frontend** – minimal UI to submit job descriptions and view recommendations.
-- **Batch inference script** – generates CSV predictions for an unlabeled dataset.
+---
 
-## Project structure
-
-- `backend/` – FastAPI application entry point.
-- `frontend/` – Streamlit application.
-- `scripts/` – CLI utilities for crawling, embedding, and batch inference.
-- `src/shl_recommender/` – shared Python package with core logic.
-- `data/` – default location for crawled catalog CSVs and generated predictions.
-- `chroma_db/` – on-disk persistence for the Chroma vector store.
-
-## Environment setup
-
-1. **Create a virtual environment** (Python 3.10+ recommended):
-
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\Scripts\activate
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment variables** by creating a `.env` file at the project root. Optional keys:
-
-   ```bash
-   LOGFIRE_API_KEY=your_logfire_api_key  # optional; omit or leave blank to disable remote logging
-   ```
-
-   Optional overrides:
-
-   ```bash
-   CHROMA_PATH=chroma_db
-   EMBEDDINGS_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
-   ```
-
-## Workflow
-
-### 1. Crawl the catalog
+## Quick start
 
 ```bash
-python scripts/crawl_shl_catalog.py --output data/shl_individual_assessments.csv
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+# 1) Build catalog (once, or when SHL site changes)
+python scripts/crawl_shl_catalog.py
+
+# 2) Build vector index
+python scripts/build_vector_store.py --reset
+
+# 3) API + UI (two terminals)
+uvicorn backend.main:app --reload --port 8000
+streamlit run frontend/app.py
 ```
 
-This fetches individual assessment metadata, filters out pre-packaged job solutions, and stores the CSV locally.
+Optional `.env`:
 
-### 2. Build embeddings and vector store
+```bash
+GEMINI_API_KEY=...           # better type extraction from queries
+CHAT_USE_GEMINI_REPLIES=false
+LOGFIRE_API_KEY=...
+CHROMA_PATH=chroma_db
+```
+
+---
+
+## Assignment compliance checklist
+
+| Requirement | Implementation |
+|-------------|----------------|
+| `GET /health` → `{"status": "ok"}` | `backend/main.py` |
+| `POST /chat` stateless, full `messages` history | `ChatAgent` + `ChatRequest` / `ChatResponse` |
+| Response schema: `reply`, `recommendations`, `end_of_conversation` | `data_models.ChatResponse` |
+| Recommendations: `name`, `url`, `test_type` (catalog codes e.g. `K`, `K,P`) | `ChatRecommendationItem` |
+| 1–10 recommendations when committed; `[]` when clarifying/refusing | Orchestrator + analyzer |
+| Clarify vague queries before recommending | `conversation_analyzer` + `clarification_engine` |
+| Refine mid-conversation | Re-retrieve on merged user history |
+| Compare assessments (catalog-grounded) | `comparison_engine` |
+| Refuse off-topic / injection | `refusal_guard` |
+| Max **8 turns (user + assistant messages)** | `len(messages) > 8` in `chat_agent.py` |
+| Catalog-only URLs | `validate_catalog_recommendations` |
+| Individual Test Solutions only | `crawler.py` filters pre-packaged job solutions |
+| Target latency &lt; 30s | Rule-based routing; optional Gemini polish off by default |
+
+Extra (not required by assignment): `POST /recommend` for batch Recall@10 workflows.
+
+---
+
+## How to run the scraper
+
+The scraper lives in `src/shl_recommender/crawler.py` and is invoked via:
+
+```bash
+python scripts/crawl_shl_catalog.py
+```
+
+Optional paths:
+
+```bash
+python scripts/crawl_shl_catalog.py --output data/shl_individual_assessments.csv --json-output data/shl_individual_assessments.json
+```
+
+### What it does
+
+1. Fetches all catalog listing pages from `https://www.shl.com/products/product-catalog/` (Individual Test Solutions table only).
+2. For each row, opens the detail page and extracts description, job levels, languages, duration, remote/adaptive flags, and type codes (A, B, C, D, E, K, P, S).
+3. Saves progress and raw HTML under `data_pages/page_XX.html` (cache for re-runs; gitignored).
+
+### Where data is stored
+
+| Output | Path | How to view |
+|--------|------|-------------|
+| **CSV** (used by app) | `data/shl_individual_assessments.csv` | Excel, `pandas`, any text editor |
+| **JSON** (same records) | `data/shl_individual_assessments.json` | Editor or `python -m json.tool data/shl_individual_assessments.json` |
+| **HTML cache** | `data_pages/page_01.html` … | Browser or editor (debugging only) |
+
+Quick peek:
+
+```bash
+python -c "import pandas as pd; df=pd.read_csv('data/shl_individual_assessments.csv'); print(df.shape); print(df[['name','url','assessment_types']].head())"
+```
+
+After crawling, rebuild embeddings:
 
 ```bash
 python scripts/build_vector_store.py --reset
 ```
 
-This reads the CSV, generates embeddings with `all-MiniLM-L6-v2`, and upserts them into a persistent Chroma collection.
+### If crawl fails with `getaddrinfo failed` / `Failed to resolve 'www.shl.com'`
 
-### 3. Run the FastAPI backend
+That is a **DNS/network** problem on your machine (not a Python bug). Windows cannot resolve `www.shl.com` to an IP address.
 
-```bash
-uvicorn backend.main:app --reload --port 8000
+**Fix connectivity first:**
+
+```powershell
+Resolve-DnsName www.shl.com
+ping www.shl.com
 ```
 
-Endpoints:
+Try: different network, disable VPN, flush DNS (`ipconfig /flushdns`), or set DNS to `8.8.8.8` / `1.1.1.1`.
 
-- `GET /health` → `{ "status": "ok" }`
-- `POST /recommend` with payload `{ "query": "..." }` → returns top assessments.
-
-### 4. Launch the Streamlit frontend
-
-In a separate shell:
+**Work without live SHL access:**
 
 ```bash
-export RECOMMENDER_API_URL=http://localhost:8000  # optional
-streamlit run frontend/app.py
+# From cached listing HTML (if you have data_pages/page_*.html)
+python scripts/crawl_shl_catalog.py --offline
+
+# From an existing JSON export (no network)
+python scripts/crawl_shl_catalog.py --from-json data/shl_individual_assessments.json
 ```
 
-Enter a job description and review the recommended assessments in the table output.
+If you already have `data/shl_individual_assessments.csv`, skip crawling and run `python scripts/build_vector_store.py --reset` only.
 
-### 5. Batch predictions for test datasets
+---
+
+## How retrieval works (RAG)
+
+This project uses **retrieval-augmented ranking**, not a document-QA LLM chain.
+
+### “Chunking”
+
+There is **no text splitting**. Each SHL assessment is **one chunk** — a single embedding of `AssessmentMetadata.combined_text()`:
+
+- name  
+- description  
+- job levels, languages, duration  
+- type codes  
+
+Roughly one vector per catalog row (~hundreds of assessments).
+
+### Embedding model
+
+`sentence-transformers/all-MiniLM-L6-v2` (384-dim) via `EmbeddingService` in `embedding.py`.
+
+### Vector store
+
+**ChromaDB** (persistent, cosine HNSW) at `chroma_db/`, collection `shl_assessments`.
+
+### Matching (retrieval + ranking)
+
+1. **Embed** the user query (or merged conversation text).
+2. **Query Chroma** for top `candidate_pool_size` (default 20) by cosine similarity.
+3. **Extract assessment types** from the query (Gemini if configured, else keyword heuristics in `type_extraction.py`).
+4. **Rank**: type-matching candidates first, then by embedding similarity within each group.
+5. **Count**: return 1–10 for `/chat`, 5–10 default for `/recommend`.
+
+The LLM (Gemini) is **optional** and used for type codes only — not for generating assessment names. That keeps recommendations grounded in the catalog.
+
+```
+User messages → merged query text
+       → embed query
+       → Chroma similarity search
+       → type-aware re-rank
+       → validate URLs ⊆ catalog CSV
+       → ChatRecommendationItem(name, url, test_type)
+```
+
+---
+
+## Why 8 turns?
+
+The assignment states:
+
+> *The evaluator caps each conversation at **8 turns including user & assistant** and each call at a 30 second timeout.*
+
+So **one turn = one message** (whether from the user or the assistant). A full exchange is typically 2 turns (user + assistant).
+
+**Why it exists**
+
+- Forces concise clarification instead of endless back-and-forth.  
+- Keeps automated replay harness runs bounded.  
+- Matches how SHL scores “turn cap” hard evals.
+
+**Implementation**
+
+- `config.max_conversation_turns = 8`  
+- `chat_agent.py`: if `len(messages) > 8` → `end_of_conversation: true` and a closing message.  
+- Streamlit UI shows `message_count / 8`.
+
+---
+
+## Project layout and how files interact
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │           scripts/ (CLI, offline)        │
+                    │ crawl_shl_catalog → build_vector_store   │
+                    │ generate_predictions, run_conversation_* │
+                    └───────────────┬─────────────────────────┘
+                                    │ writes CSV + Chroma
+                                    ▼
+┌──────────────┐    HTTP     ┌──────────────┐    imports    ┌────────────────────────────┐
+│ frontend/    │ ──────────► │ backend/     │ ────────────► │ src/shl_recommender/       │
+│ Streamlit UI │  /chat      │ main.py      │               │                            │
+└──────────────┘  /health    └──────────────┘               │  agent/chat_agent.py ◄───┐ │
+                                                              │    ├─ conversation_analyzer
+                                                              │    ├─ clarification_engine
+                                                              │    ├─ refusal_guard          │
+                                                              │    ├─ comparison_engine      │
+                                                              │    └─ recommendation_orchestrator
+                                                              │           │                │
+                                                              │           ▼                │
+                                                              │  recommender.py ───────────┘
+                                                              │    ├─ embedding.py → Chroma
+                                                              │    └─ type_extraction.py
+                                                              │  data_models.py (schemas)
+                                                              │  crawler.py (scrape only)
+                                                              └────────────────────────────┘
+```
+
+### File reference
+
+| Path | Role |
+|------|------|
+| `backend/main.py` | FastAPI app: `/health`, `/chat`, optional `/recommend` |
+| `frontend/app.py` | Chat UI; sends full `messages[]` to `/chat` each turn |
+| `src/shl_recommender/crawler.py` | Scrape SHL catalog → metadata list |
+| `src/shl_recommender/embedding.py` | Load CSV, embed, upsert Chroma; query client |
+| `src/shl_recommender/recommender.py` | Vector retrieval + type ranking (core quality) |
+| `src/shl_recommender/type_extraction.py` | Gemini/heuristic type codes from text |
+| `src/shl_recommender/agent/chat_agent.py` | Dialogue router (clarify / recommend / compare / refuse) |
+| `src/shl_recommender/agent/conversation_analyzer.py` | Intent + “enough context?” signals |
+| `src/shl_recommender/agent/clarification_engine.py` | One clarifying question when vague |
+| `src/shl_recommender/agent/recommendation_orchestrator.py` | Wraps engine; catalog validation; chat schema |
+| `src/shl_recommender/agent/comparison_engine.py` | Name match + catalog-only compare text |
+| `src/shl_recommender/agent/refusal_guard.py` | Off-topic / injection detection |
+| `src/shl_recommender/agent/prompt_templates.py` | Reply templates |
+| `src/shl_recommender/agent/llm_reply.py` | Optional Gemini reply polish |
+| `src/shl_recommender/data_models.py` | Pydantic models for API and catalog |
+| `src/shl_recommender/config.py` | Settings from env |
+| `src/shl_recommender/evaluation/conversation_simulator.py` | Multi-turn test harness |
+| `scripts/crawl_shl_catalog.py` | CLI entry for crawler |
+| `scripts/build_vector_store.py` | CLI entry for Chroma build |
+| `scripts/run_conversation_simulator.py` | Scripted chat scenarios |
+| `tests/test_agent.py`, `tests/test_recommender.py` | Unit tests |
+| `data/shl_individual_assessments.csv` | Catalog source of truth |
+| `chroma_db/` | Persisted embeddings (gitignored) |
+| `migration_plan.md` | v1→v2 migration notes (internal doc) |
+
+### Runtime flow (one `/chat` call)
+
+1. Client POSTs `{ "messages": [...] }`.  
+2. `backend/main.py` → `ChatAgent.handle()`.  
+3. Turn cap → refusal → end → compare → clarify → recommend/refine.  
+4. On recommend: `RecommendationOrchestrator` merges user text → `RecommendationEngine.recommend()` → Chroma + rank.  
+5. Map to `ChatRecommendationItem` → return `ChatResponse`.
+
+---
+
+## API examples
+
+### Health
 
 ```bash
-python scripts/generate_predictions.py --input data/unlabeled_queries.xlsx --column query --output data/predictions.csv
+curl http://localhost:8000/health
+# {"status":"ok"}
 ```
 
-The script reads the specified column, runs recommendations for each row, and writes JSON-formatted assessment lists to the output CSV.
+### Chat — clarification (empty recommendations)
 
-## Deployment on Render
+```bash
+curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d "{\"messages\":[{\"role\":\"user\",\"content\":\"Hi\"}]}"
+```
 
-This project includes a `render.yaml` configuration file for deploying both the backend and frontend services on Render.
+### Chat — recommendations
 
-### Finding Your URLs
+```bash
+curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d "{\"messages\":[{\"role\":\"user\",\"content\":\"Mid-level Java developer working with stakeholders; need technical and personality screening\"}]}"
+```
 
-After deploying on Render, you can find your service URLs in the Render dashboard:
+Example response shape:
 
-1. **Backend URL**: Navigate to your `shl-recommender-backend` service in the Render dashboard. The URL will be displayed at the top (e.g., `https://shl-recommender-backend.onrender.com`)
-2. **Frontend URL**: Navigate to your `shl-recommender-frontend` service. The URL will be displayed at the top (e.g., `https://shl-recommender-frontend.onrender.com`)
+```json
+{
+  "reply": "Based on your needs...",
+  "recommendations": [
+    {"name": "Java 8 (New)", "url": "https://www.shl.com/...", "test_type": "K"},
+    {"name": "OPQ32r", "url": "https://www.shl.com/...", "test_type": "P"}
+  ],
+  "end_of_conversation": false
+}
+```
 
-### How Render Knows What Commands to Run
+---
 
-The `render.yaml` file specifies the startup commands for each service:
+## Tests and simulation
 
-**Backend Service:**
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
-  - Uses `$PORT` environment variable provided by Render
-  - Binds to `0.0.0.0` to accept external connections
+```bash
+python -m pytest tests/ -q
+python scripts/run_conversation_simulator.py --scenario clarify_then_recommend
+```
 
-**Frontend Service:**
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0`
-  - Uses `$PORT` environment variable provided by Render
-  - Binds to `0.0.0.0` to accept external connections
+---
 
-### Environment Variables
+## Deployment (Render)
 
-The `render.yaml` automatically configures:
-- `RECOMMENDER_API_URL` for the frontend (automatically set to the backend service URL)
-- `CHROMA_PATH` and `EMBEDDINGS_MODEL_NAME` for the backend
+See `render.yaml`. Before submitting:
 
-You'll need to manually set `LOGFIRE_API_KEY` in the Render dashboard if you want remote logging enabled.
+1. Deploy backend; ensure `data/shl_individual_assessments.csv` and `chroma_db/` exist on the instance.  
+2. Set `GEMINI_API_KEY` if using Gemini type extraction.  
+3. Verify `GET /health` and `POST /chat` from the public URL.
 
-### Deploying
+---
 
-1. Push your code to GitHub/GitLab
-2. In Render dashboard, create a new "Blueprint" and connect your repository
-3. Render will automatically detect `render.yaml` and create both services
-4. After deployment, note the URLs for both services
+## Files safe to delete locally
 
-## Logs and monitoring
+These are **not required** in git or at runtime if you already have CSV + Chroma:
 
-Logging is instrumented with [Logfire](https://logfire.pydantic.dev/). Supply `LOGFIRE_API_KEY` in `.env` to stream structured logs. Without a key, logging remains local.
+| Item | Reason |
+|------|--------|
+| `data_pages/` | HTML scrape cache; regenerated on crawl |
+| `scripts/data_pages/` | Duplicate cache (removed from repo) |
+| `scripts/chroma_db/` | Stray copy (removed from repo) |
+| `__pycache__/`, `.pytest_cache/` | Auto-regenerated |
+| Old assignment PDFs | Keep only `SHL_AI_Intern_Assignment.pdf` |
 
-## Notes
+**Do not delete:** `data/shl_individual_assessments.csv`, `chroma_db/` (active index), or `src/`.
 
-- The system uses vector similarity ranking based on embedding similarity scores.
-- The balanced recommendation rule requires at least three `K` and three `P` assessments in the candidate pool to trigger; otherwise, the system returns the highest-ranking results.
-- All scripts print progress to the terminal for traceability.
+---
 
+## Remaining improvements
+
+- [ ] Eval harness on SHL’s 10 public conversation traces (Recall@10 + behavior probes)  
+- [ ] Embedding-based name resolution for “compare X and Y”  
+- [ ] Production load test for p95 &lt; 30s on `/chat`  
+- [ ] Optional `CHAT_USE_GEMINI_REPLIES=true` after latency check  
+
+See also [`migration_plan.md`](migration_plan.md) for the original v1→v2 migration analysis.

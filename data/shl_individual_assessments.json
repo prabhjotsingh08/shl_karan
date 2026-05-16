@@ -1,15 +1,15 @@
-  [
+[
   {
     "entity_id": "4302",
     "name": "Global Skills Development Report",
     "url": "https://www.shl.com/products/product-catalog/view/global-skills-development-report/",
     "assessment_types": [
-      "C",
       "E",
-      "D",
-      "P",
       "B",
-      "A"
+      "A",
+      "C",
+      "D",
+      "P"
     ],
     "description": "This report is designed to be given to individuals who have completed the Global Skills Assessment (GSA). With coverage across the Great 8 Domains, this measure of self-reported behaviors offers a complete overview of their current skills. Participants receive actionable tips on leveraging their top skill strengths and how they might develop their growth skills.",
     "job_levels": [
@@ -1361,8 +1361,8 @@
     "name": "Customer Service Phone Simulation",
     "url": "https://www.shl.com/products/product-catalog/view/customer-service-phone-simulation/",
     "assessment_types": [
-      "B",
-      "S"
+      "S",
+      "B"
     ],
     "description": "As part of Contact Center Simulations, the Customer Service Phone Simulation is designed for entry-level positions in a contact center environment. Sample tasks for these jobs include: verify the customer or account; take ownership of customer issues; interact with customers to provide information; respond positively to difficult, irate, or confused customers; listen attentively to callers; resolve calls in a timely manner; navigate within multiple information menus to view customer account details and process information; and type information quickly and accurately. Potential job titles that use this solution are: Call Center Representative, Contact Center Representative, Contact Center Agent, Customer Service Agent, Customer Service Representative, and Customer Advocate. \"Please note that for Simplified Chinese version the audio is available in both Mandarin and Cantonese.\"",
     "job_levels": [
@@ -1390,9 +1390,9 @@
     "name": "Customer Service Phone Solution",
     "url": "https://www.shl.com/products/product-catalog/view/customer-service-phone-solution/",
     "assessment_types": [
-      "P",
+      "S",
       "B",
-      "S"
+      "P"
     ],
     "description": "As part of Contact Center Simulations, the Customer Service Phone Solution includes a contact center simulation and two behavioral tests designed to measure a wide range of skills, competencies, and behavioral tendencies relevant for contact center jobs. The Contact Center Simulation provides an opportunity for candidates to interact with simulated customers in a contact center environment. Designed to measure a candidate’s ability to listen attentively to the customer, take ownership of customer issues, resolve issues, navigate to find information, and enter information accurately, the Contact Center Simulation is intended to measure how a candidate will respond in a variety of customer situations and assess the candidate’s computer skills in a contact center setting. The behavioral tests in this solution are intended to measure the candidate’s learning potential and the tendency to meet goals and work hard, even when faced with obstacles. Collectively, the assessments in this solution measure a wide range of important skills, abilities, and behaviors for entry-level contact center roles. \"Please note that for Simplified Chinese version the audio is available in both Mandarin and Cantonese.\"",
     "job_levels": [
@@ -2008,8 +2008,8 @@
     "name": "Entry Level Cashier Solution",
     "url": "https://www.shl.com/products/product-catalog/view/entry-level-cashier-solution/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The Precise Fit Entry Level Cashier Solution is for entry-level retail positions in which employees receive payment in the form of cash, check, or credit cards for goods purchased. Sample tasks for these jobs include, but are not limited to: handling payments, offering customer service, and issuing receipts and refunds. Report Language Availability: English (USA)",
     "job_levels": [
@@ -2072,8 +2072,8 @@
     "name": "Entry Level Customer Service (General) Solution",
     "url": "https://www.shl.com/products/product-catalog/view/entry-level-customer-service-general-solution/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The Precise Fit Entry Level Customer Service Solution (General) is for a wide range of entry-level positions where employees are expected to interact with customers when carrying out critical tasks of the job. This includes positions that require frequent interactions with customers, or positions where customer service is not central to the role, but is still essential for successful performance on the job. Sample tasks for these jobs include, but are not limited to: interacting with customers on the phone to provide information; taking orders; solving product or service issues; and responding positively to difficult or irate customers. Report Language Availability: English (USA)",
     "job_levels": [
@@ -2104,8 +2104,8 @@
     "name": "Entry Level Hotel Front Desk Solution",
     "url": "https://www.shl.com/products/product-catalog/view/entry-level-hotel-front-desk-solution/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The Precise Fit Entry Level Hotel Front Desk Solution is for entry-level customer service positions in the hospitality industry. The solution is appropriate for positions in which the majority of the work is done at the front or guest check-in desk. Sample tasks may include: welcoming guests warmly, issuing keys to guests, and accepting payment. Report Language Availability: English (USA)",
     "job_levels": [
@@ -2136,8 +2136,8 @@
     "name": "Entry Level Sales Solution",
     "url": "https://www.shl.com/products/product-catalog/view/entry-level-sales-solution/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The Precise Fit Entry Level Sales Roles Solution is for entry-level positions in which employees proactively sell products or services to customers and have their compensation and/or performance based on sales revenue. Sample tasks for these jobs include, but are not limited to: promoting products to customers, persuading customers to buy products, and completing a transaction with a customer. Report Language Availability: English (USA)",
     "job_levels": [
@@ -2624,8 +2624,8 @@
     "name": "Global Skills Assessment",
     "url": "https://www.shl.com/products/product-catalog/view/global-skills-assessment/",
     "assessment_types": [
-      "C",
-      "K"
+      "K",
+      "C"
     ],
     "description": "The Global Skills Assessment (GSA) is an assessment used to measure 96 discrete skills/behaviors. These 96 skill scores are directly aligned to the most discrete level of SHL’s Universal Competency Framework (UCF). The GSA measures self-reported behaviors an individual currently engages in. A person’s skills (sets of behavior) are malleable and may change over time. SHL utilizes GSA scores to understand what the participant reports they can do today.",
     "job_levels": [],
@@ -2763,8 +2763,8 @@
     "name": "HiPo Assessment Report 1.0",
     "url": "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-1-0/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "Part of SHL’s High Potential solution and developed from SHL’s extensive research into high-potential programs, the HIPO Assessment Report 1.0 helps organizations identify individuals with the strongest potential to succeed in senior and challenging roles. Using assessments such as the Motivation Questionnaire, OPQ, and Verify Cognitive Ability Tests, the report evaluates critical areas of aspiration, ability, and engagement. This version is used in regions where normed data for Verify Gen 1 and UCF 1 continue to provide the most relevant benchmarks, offering organizations proven insights for high-potential identification and talent development.",
     "job_levels": [],
@@ -2778,8 +2778,8 @@
     "name": "HiPo Assessment Report 2.0",
     "url": "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-2-0/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "Part of SHL’s High Potential solution and developed from SHL’s extensive research into high-potential programs, the HIPO Assessment Report 2.0 helps organizations identify individuals with the strongest potential to succeed in senior and challenging roles. Using assessments such as the Motivation Questionnaire, OPQ, and Verify Cognitive Ability Tests, the report evaluates critical areas of aspiration, ability, and engagement. This report equips organizations with data-driven insights for identifying and developing future leaders, helping to ensure long-term organizational success.",
     "job_levels": [],
@@ -4455,9 +4455,9 @@
     "name": "Multitasking Ability",
     "url": "https://www.shl.com/products/product-catalog/view/multitasking-ability/",
     "assessment_types": [
-      "A",
       "K",
-      "S"
+      "S",
+      "A"
     ],
     "description": "The Multitasking Ability assessment is a measure of one’s ability to adeptly work on more than one task simultaneously, while maintaining efficiency and effectiveness when interrupted or switching between tasks.  This test is a face-valid, split-screen simulation that is designed to assess multitasking ability. It captures the dynamic nature of the working environment by presenting the candidate with multiple types of items in a timed format. Candidates will be required to complete problem-solving items that are presented on one side of the screen, while at the same time attending to emails that are presented within an email inbox on the other side of the screen.",
     "job_levels": [
@@ -5367,8 +5367,8 @@
     "name": "OPQ User Report",
     "url": "https://www.shl.com/products/product-catalog/view/opq-user-report/",
     "assessment_types": [
-      "P",
-      "S"
+      "S",
+      "P"
     ],
     "description": "This OPQ (Occupational Personality Questionnaire) report includes a Profile Chart and narrative text, focusing on an individuals likely way of behaving at work.  It can be used as an interpretation aid when giving feedback, writing reports, or interpreting OPQ information.",
     "job_levels": [
@@ -5743,8 +5743,8 @@
     "url": "https://www.shl.com/products/product-catalog/view/pjm-development-report/",
     "assessment_types": [
       "A",
-      "C",
-      "P"
+      "P",
+      "C"
     ],
     "description": "The Person-Job Match Report is unique in that it\r\nmatches the performance potential of the\r\nindividual to the job’s specific competencies. This\r\nprovides you with a comprehensive and insightful\r\nunderstanding of person-job fit.  The PJM Development report is written to support competency focused development of an individual.\r\n\r\nIn a development context, this report can be used: To identify specific areas of strength and weakness that may impact on the individual?s \r\nperformance.As the basis for identifying areas for development and development planning. For discussing fit to future roles and career planning.",
     "job_levels": [
@@ -5770,8 +5770,8 @@
     "url": "https://www.shl.com/products/product-catalog/view/pjm-selection-report/",
     "assessment_types": [
       "A",
-      "C",
-      "P"
+      "P",
+      "C"
     ],
     "description": "The PJM Report provides a clear indication of each candidate's \"degree of fit\" to a role.  Provides targeted assessment results that match individuals with jobs . Links the essential/desirable competencies for a specific job with an individual’s competency potential. Provides an overall Match (or fit) Score useful in ranking/sorting candidates for selection \r\nand/or development (e.g. Talent Audit).  It provides a highly visual profile of a candidate's strengths and limitations against identified required competencies. Includes a summary table that enables prioritisation of action planning for development of critical competencies for an individual (by tabling Competency Potential against Job Importance for the role). It includes highly descriptive statements about a candidate's strengths and development  needs/limitations. \r\nThe extended report versions include proposed competency-based interview questions \r\nto enable probing of specific situations in which the candidate might have \r\ndemonstrated critical job behaviours. \r\n  \r\nThe PJM Report is designed for use by line managers and HR professionals in selection and \r\ndevelopment situations. It is valuable for identifying an individual's overall fit as well as likely areas of \r\nstrength and weakness relative to their behaviour at work. \r\n \r\nIn a selection context, this information can be used: For making interviewers aware of the areas that may need further probing. As a basis for suggesting and creating relevant interview questions. For identifying the relative strengths and weaknesses of shortlisted candidates.",
     "job_levels": [
@@ -6205,10 +6205,10 @@
     "name": "Retail Sales and Service Simulation",
     "url": "https://www.shl.com/products/product-catalog/view/retail-sales-and-service-simulation/",
     "assessment_types": [
-      "A",
-      "B",
       "K",
-      "S"
+      "S",
+      "B",
+      "A"
     ],
     "description": "The Retail Sales and Service Simulation measures the ability of a candidate to choose effective sales and service techniques while interacting with customers. Situations are presented to the candidate via computer-based animation, and the candidate is offered a set of behaviors from which to choose the most and least effective responses. The behaviors vary in the extent to which the sales associate may: direct a conversation toward a commitment or sale, listen carefully to customers and provide options that address what they really need/want, put aside work to assist a customer, and focus on meeting customer needs. Responses are tracked and compared against expert ratings of effectiveness. The test produces an overall score, as well as scores on two subscales, Customer Service Effectiveness and Sales Effectiveness.",
     "job_levels": [
@@ -6283,8 +6283,8 @@
     "name": "Sales & Service Phone Simulation",
     "url": "https://www.shl.com/products/product-catalog/view/sales-and-service-phone-simulation/",
     "assessment_types": [
-      "B",
-      "S"
+      "S",
+      "B"
     ],
     "description": "As part of Contact Center Simulations, the Sales & Service Phone Simulation is designed for contact center roles that involve sales or sales-related behaviors such as recommending products or services and retaining customers. Sample tasks for these jobs include: interacting with customers on the phone to sell a product/service; adding new or upgraded products or services; extending promotional or retention offers; responding appropriately to customer objections; navigating to information menus to assist the customer and process information; and typing information quickly and accurately. Potential job titles that use this simulation include: telesales representative, outbound sales representative, telemarketer, and contact center representative.",
     "job_levels": [
@@ -6313,9 +6313,9 @@
     "name": "Sales & Service Phone Solution",
     "url": "https://www.shl.com/products/product-catalog/view/sales-and-service-phone-solution/",
     "assessment_types": [
-      "P",
+      "S",
       "B",
-      "S"
+      "P"
     ],
     "description": "As part of Contact Center Simulations, the Sales & Service Phone Solution includes a contact center simulation and three behavioral tests designed to measure a wide range of skills, competencies, and behavioral tendencies relevant for contact center jobs. This solution is designed for contact center roles that involve sales or sales-related behaviors such as recommending products or services and retaining customers. Sample tasks for these jobs include: interact with customers on the phone to sell a product/service; add new or upgraded products or services; extend promotional or retention offers; respond appropriately to customer objections; navigate to information menus to assist the customer and process information; and type information quickly and accurately. Potential job titles that use this simulation are: Telesales Representative, Telemarketer, and Contact Center Representative. The behavioral tests in this solution are intended to measure the candidate’s sales focus, learning potential, and the tendency to meet goals and work hard, even when faced with obstacles. Collectively, the assessments in this solution measure a wide range of important skills, abilities, and behaviors for entry-level contact center roles involving sales or sales and service.",
     "job_levels": [
@@ -6725,8 +6725,8 @@
     "name": "SHL Verify Interactive - Inductive Reasoning",
     "url": "https://www.shl.com/products/product-catalog/view/shl-verify-interactive-inductive-reasoning/",
     "assessment_types": [
-      "A",
-      "S"
+      "S",
+      "A"
     ],
     "description": "Evaluates ability to identify specific patterns in data or situations and generalize that information to broader contexts.",
     "job_levels": [
@@ -6780,8 +6780,8 @@
     "name": "SHL Verify Interactive – Deductive Reasoning",
     "url": "https://www.shl.com/products/product-catalog/view/shl-verify-interactive-deductive-reasoning/",
     "assessment_types": [
-      "A",
-      "S"
+      "S",
+      "A"
     ],
     "description": "Measures the ability to draw logical conclusions based on information provided, identify strengths and weaknesses of arguments, and complete scenarios using incomplete information.",
     "job_levels": [
@@ -6834,8 +6834,8 @@
     "name": "SHL Verify Interactive – Numerical Reasoning",
     "url": "https://www.shl.com/products/product-catalog/view/shl-verify-interactive-numerical-reasoning/",
     "assessment_types": [
-      "A",
-      "S"
+      "S",
+      "A"
     ],
     "description": "Assesses how the candidate comprehends numerical information in various formats.",
     "job_levels": [
@@ -7132,8 +7132,8 @@
     "name": "Split Screen Typing Test - Form 1",
     "url": "https://www.shl.com/products/product-catalog/view/split-screen-typing-test-form-1/",
     "assessment_types": [
-      "A",
-      "K"
+      "K",
+      "A"
     ],
     "description": "This test measures speed and accuracy in typing text presented on the computer screen. In this assessment, the text original is displayed directly above the area in which the test taker must enter the response. The test taker will not need a printed original for the evaluation. This test calculates a score based on the total number of keystrokes, time taken, and number of errors made when typing six passages. This Split Screen Typing Test uses the following method to determine the Net Words Per Minute score: Net Words Per Minute = ((Gross Words Per Minute * Time Taken) - Total Errors) / Time Taken.",
     "job_levels": [
@@ -7606,8 +7606,8 @@
     "name": "Universal Competency Framework Interview Guide",
     "url": "https://www.shl.com/products/product-catalog/view/universal-competency-framework-interview-guide/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The UCF Interview Guide provides a structured way of gathering information about each candidate and their competency potential across the 20 UCF Dimensions.\r\n\r\nNOTE: Simplified Chinese Guide is available from local office; Portuguese Guide is available from Distributor",
     "job_levels": [
@@ -7634,8 +7634,8 @@
     "name": "Universal Competency Framework Job profiling guide",
     "url": "https://www.shl.com/products/product-catalog/view/universal-competency-framework-job-profiling-guide/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The SHL Universal Competency Framework establishes a common language for competencies that underpins SHL’s products and services. It is a single underlying construct framework that provides a rational, consistent and practical basis for the purpose of understanding people’s behaviours at work and the likelihood of being able to succeed in a given role and in a given environment",
     "job_levels": [
@@ -7660,8 +7660,8 @@
     "name": "Universal Competency Framework Profiler Cards (44)",
     "url": "https://www.shl.com/products/product-catalog/view/universal-competency-framework-profiler-cards-44/",
     "assessment_types": [
-      "P",
-      "C"
+      "C",
+      "P"
     ],
     "description": "The UCF sets out the key behaviours that drive performance using a standard, proven hierarchy that can be applied to virtually any job at any level, in any organisation around the world.",
     "job_levels": [
@@ -8422,8 +8422,8 @@
     "name": "WriteX - Email Writing (Sales) (New)",
     "url": "https://www.shl.com/products/product-catalog/view/writex-email-writing-sales-new/",
     "assessment_types": [
-      "B",
-      "S"
+      "S",
+      "B"
     ],
     "description": "Open response test that evaluates the ability to write proper emails in English. The test provides scores on content, grammar and email etiquette. Your use of this assessment product may be subject to New York City Law 144 (Regulation of the Use of Automated Employment Decision Tools) (dated July 5, 2023). Compliance with Law 144 is your responsibility.\r\nRead more on https://www.shl.com/legal/shl-us-regulatory-compliance/",
     "job_levels": [
@@ -8530,8 +8530,8 @@
     "name": "360° Multi-Rater Feedback System (MFS)",
     "url": "https://www.shl.com/products/product-catalog/view/360-multi-rater-feedback-system-mfs/",
     "assessment_types": [
-      "P",
-      "D"
+      "D",
+      "P"
     ],
     "description": "SHL 360, or the Multi-Rater Feedback System (‘MFS’), provides a holistic 360-degree view of an employee by gathering feedback from the employee’s manager, peers, direct reports, and/or other raters.  By offering a wide range of perspectives, 360 feedback gives employees a more thorough understanding of not only their strengths, weaknesses, and development opportunities, but also their impact on others.  360-degree multi-rater assessments are based on SHL’s Universal Competency Framework (“UCF”), using our proven library of research-driven competencies to provide opportunities for managers, peers, and direct reports to supply useful developmental feedback that they may not otherwise share.  SHL can also offer support and training throughout the entire process, from defining objectives through interpreting and delivering the feedback.  360 feedback serves all levels and industries and is a positive and powerful addition to your performance management system.",
     "job_levels": [

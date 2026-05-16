@@ -1,5 +1,4 @@
 services:
-  # Backend FastAPI service
   - type: web
     name: shl-recommender-backend
     env: python
@@ -11,8 +10,25 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.0
       - key: LOGFIRE_API_KEY
-        sync: false  # Set this in Render dashboard
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: CHROMA_PATH
         value: chroma_db
       - key: EMBEDDINGS_MODEL_NAME
         value: sentence-transformers/all-MiniLM-L6-v2
+
+  - type: web
+    name: shl-recommender-frontend
+    env: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: RECOMMENDER_API_URL
+        fromService:
+          type: web
+          name: shl-recommender-backend
+          property: host

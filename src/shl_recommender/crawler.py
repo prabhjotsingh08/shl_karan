@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 
 from .config import get_settings
 from .data_models import AssessmentMetadata
+from .paths import resolve_project_path
 from .logging_setup import configure_logging
 
 
@@ -133,14 +134,13 @@ def _extract_total_pages(soup: BeautifulSoup) -> Optional[int]:
     return max(page_numbers) if page_numbers else None
 
 
-def _parse_catalog_page(session: requests.Session, url: str) -> Tuple[List[CatalogRow], Optional[int], str]:
-    response = session.get(url, timeout=REQUEST_TIMEOUT)
-    response.raise_for_status()
-    page_html = response.text
+class CrawlerNetworkError(RuntimeError):
+    """Raised when www.shl.com cannot be reached (DNS, firewall, or offline)."""
+
+
+def _parse_catalog_html(page_html: str) -> Tuple[List[CatalogRow], Optional[int]]:
     soup = BeautifulSoup(page_html, "html.parser")
-
     total_pages = _extract_total_pages(soup)
-
     table_candidates = soup.select("div.custom__table-wrapper table")
 
     individual_tables = []
@@ -151,7 +151,7 @@ def _parse_catalog_page(session: requests.Session, url: str) -> Tuple[List[Catal
             individual_tables.append(table)
 
     if not individual_tables:
-        return [], total_pages, page_html
+        return [], total_pages
 
     rows = []
     for table in individual_tables:
@@ -164,6 +164,21 @@ def _parse_catalog_page(session: requests.Session, url: str) -> Tuple[List[Catal
                 continue
             rows.append(row)
 
+    return rows, total_pages
+
+
+def _parse_catalog_page(session: requests.Session, url: str) -> Tuple[List[CatalogRow], Optional[int], str]:
+    try:
+        response = session.get(url, timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+    except requests.ConnectionError as exc:
+        raise CrawlerNetworkError(
+            "Cannot reach www.shl.com (DNS/network). Check internet/VPN/firewall, or run: "
+            "python scripts/crawl_shl_catalog.py --offline "
+            "(if data_pages/*.html exists) or --from-json PATH."
+        ) from exc
+    page_html = response.text
+    rows, total_pages = _parse_catalog_html(page_html)
     return rows, total_pages, page_html
 
 
@@ -174,10 +189,11 @@ def _page_url(page_index: int, page_size: int = 12) -> str:
     return f"{BASE_CATALOG_URL}?type={INDIVIDUAL_SOLUTIONS_TYPE}&start={start}"
 
 
-def _prepare_pages_dir(pages_dir: Path) -> None:
+def _prepare_pages_dir(pages_dir: Path, *, clear_cache: bool = False) -> None:
     pages_dir.mkdir(parents=True, exist_ok=True)
-    for existing in pages_dir.glob("*.html"):
-        existing.unlink()
+    if clear_cache:
+        for existing in pages_dir.glob("*.html"):
+            existing.unlink()
 
 
 def _persist_page_html(page_html: str, pages_dir: Path, page_number: int) -> Path:
@@ -186,14 +202,125 @@ def _persist_page_html(page_html: str, pages_dir: Path, page_number: int) -> Pat
     return destination
 
 
-def crawl_catalog() -> List[AssessmentMetadata]:
+def _rows_to_metadata(
+    rows: Iterable[CatalogRow],
+    session: requests.Session,
+    *,
+    fetch_details: bool,
+    seen_ids: set[str],
+    collected: List[AssessmentMetadata],
+) -> None:
+    for row in rows:
+        if row.entity_id in seen_ids:
+            continue
+
+        detail_info: dict = {}
+        if fetch_details:
+            try:
+                detail_info = _extract_detail_info(session, row.detail_url)
+            except requests.ConnectionError as exc:
+                raise CrawlerNetworkError(
+                    f"Lost network while fetching detail page for {row.name!r}."
+                ) from exc
+            time.sleep(REQUEST_DELAY_SECONDS)
+
+        metadata = AssessmentMetadata(
+            entity_id=str(row.entity_id),
+            name=row.name,
+            url=row.detail_url,
+            assessment_types=set(filter(None, row.assessment_types)),
+            description=detail_info.get("description"),
+            job_levels=detail_info.get("job_levels", []),
+            languages=detail_info.get("languages", []),
+            assessment_length=detail_info.get("assessment_length"),
+            remote_testing=row.remote_testing,
+            adaptive=row.adaptive,
+        )
+
+        collected.append(metadata)
+        seen_ids.add(row.entity_id)
+        logfire.debug(
+            "Collected assessment",
+            entity_id=row.entity_id,
+            name=row.name,
+            assessment_types=list(row.assessment_types),
+        )
+
+
+def crawl_catalog_from_cache(
+    pages_dir: Path | None = None,
+    *,
+    fetch_details: bool = False,
+) -> List[AssessmentMetadata]:
+    """Build catalog from cached listing HTML in data_pages/ (no listing-page fetch)."""
+
+    configure_logging("shl-crawler")
+    settings = get_settings()
+    resolved_dir = resolve_project_path(pages_dir or Path(settings.data_pages_dir))
+    html_files = sorted(resolved_dir.glob("page_*.html"))
+    if not html_files:
+        raise FileNotFoundError(
+            f"No cached pages in {resolved_dir}. "
+            "Run a full crawl when online, or copy data_pages/ from another machine."
+        )
+
+    session = _create_session() if fetch_details else None
+    collected: List[AssessmentMetadata] = []
+    seen_ids: set[str] = set()
+
+    for html_path in html_files:
+        page_html = html_path.read_text(encoding="utf-8")
+        rows, _ = _parse_catalog_html(page_html)
+        logger.info("Parsed cached %s (%d rows)", html_path.name, len(rows))
+        if not rows:
+            continue
+        _rows_to_metadata(
+            rows,
+            session or _create_session(),
+            fetch_details=fetch_details,
+            seen_ids=seen_ids,
+            collected=collected,
+        )
+
+    logfire.info("Offline cache crawl complete", total=len(collected), pages=len(html_files))
+    return collected
+
+
+def import_catalog_from_json(json_path: str | Path) -> List[AssessmentMetadata]:
+    """Load catalog records from an existing JSON export."""
+
+    resolved = resolve_project_path(Path(json_path))
+    payload = json.loads(resolved.read_text(encoding="utf-8"))
+    records: List[AssessmentMetadata] = []
+    for item in payload:
+        types = item.get("assessment_types") or []
+        if isinstance(types, str):
+            types = [part.strip() for part in types.split(",") if part.strip()]
+        records.append(
+            AssessmentMetadata(
+                entity_id=str(item["entity_id"]),
+                name=str(item["name"]),
+                url=str(item["url"]),
+                assessment_types=set(types),
+                description=item.get("description"),
+                job_levels=item.get("job_levels") or [],
+                languages=item.get("languages") or [],
+                assessment_length=item.get("assessment_length"),
+                remote_testing=item.get("remote_testing"),
+                adaptive=item.get("adaptive"),
+            )
+        )
+    return records
+
+
+def crawl_catalog(*, clear_page_cache: bool = False) -> List[AssessmentMetadata]:
     """Crawl the SHL catalog and return metadata for individual assessments."""
 
     configure_logging("shl-crawler")
     settings = get_settings()
     session = _create_session()
-    pages_dir = Path(settings.data_pages_dir)
-    _prepare_pages_dir(pages_dir)
+    pages_dir = resolve_project_path(Path(settings.data_pages_dir))
+    _prepare_pages_dir(pages_dir, clear_cache=clear_page_cache)
 
     collected: List[AssessmentMetadata] = []
     seen_ids: set[str] = set()
@@ -224,39 +351,17 @@ def crawl_catalog() -> List[AssessmentMetadata]:
         logfire.info("Parsed page", page_index=page_index, url=url, row_count=len(rows))
 
         if not rows:
-            logfire.warning("No rows found for catalog page", page_index=page_index, url=url)
+            logfire.warn("No rows found for catalog page", page_index=page_index, url=url)
             logger.warning("No rows found on page %d; stopping crawl", page_number)
             break
 
-        for row in rows:
-            if row.entity_id in seen_ids:
-                continue
-
-            detail_info = _extract_detail_info(session, row.detail_url)
-
-            metadata = AssessmentMetadata(
-                entity_id=str(row.entity_id),
-                name=row.name,
-                url=row.detail_url,
-                assessment_types=set(filter(None, row.assessment_types)),
-                description=detail_info.get("description"),
-                job_levels=detail_info.get("job_levels", []),
-                languages=detail_info.get("languages", []),
-                assessment_length=detail_info.get("assessment_length"),
-                remote_testing=row.remote_testing,
-                adaptive=row.adaptive,
-            )
-
-            collected.append(metadata)
-            seen_ids.add(row.entity_id)
-            logfire.debug(
-                "Collected assessment",
-                entity_id=row.entity_id,
-                name=row.name,
-                assessment_types=list(row.assessment_types),
-            )
-
-            time.sleep(REQUEST_DELAY_SECONDS)
+        _rows_to_metadata(
+            rows,
+            session,
+            fetch_details=True,
+            seen_ids=seen_ids,
+            collected=collected,
+        )
 
         page_index += 1
         logger.info("Completed page %d with %d assessments", page_number, len(rows))
@@ -276,7 +381,8 @@ def write_catalog_to_csv(records: Iterable[AssessmentMetadata], output_path: Opt
     """Persist catalog records to CSV and return the resolved path."""
 
     settings = get_settings()
-    destination = output_path or str(settings.data_csv_path)
+    destination = str(resolve_project_path(Path(output_path or settings.data_csv_path)))
+    Path(destination).parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
         "entity_id",
         "name",
@@ -317,7 +423,8 @@ def write_catalog_to_json(records: Iterable[AssessmentMetadata], output_path: Op
     """Persist catalog records to JSON and return the resolved path."""
 
     settings = get_settings()
-    destination = output_path or str(settings.data_json_path)
+    destination = str(resolve_project_path(Path(output_path or settings.data_json_path)))
+    Path(destination).parent.mkdir(parents=True, exist_ok=True)
     payload = [record.model_dump(mode="json") for record in records]
 
     with open(destination, "w", encoding="utf-8") as jsonfile:
@@ -330,10 +437,21 @@ def write_catalog_to_json(records: Iterable[AssessmentMetadata], output_path: Op
 def crawl_and_save(
     output_path: Optional[str] = None,
     json_output_path: Optional[str] = None,
+    *,
+    offline: bool = False,
+    from_json: Optional[str] = None,
+    fetch_details_offline: bool = False,
+    clear_page_cache: bool = False,
 ) -> Tuple[str, str]:
     """Utility helper combining crawl and CSV persistence."""
 
-    records = crawl_catalog()
+    if from_json:
+        records = import_catalog_from_json(from_json)
+    elif offline:
+        records = crawl_catalog_from_cache(fetch_details=fetch_details_offline)
+    else:
+        records = crawl_catalog(clear_page_cache=clear_page_cache)
+
     csv_path = write_catalog_to_csv(records, output_path)
     json_path = write_catalog_to_json(records, json_output_path)
     return csv_path, json_path

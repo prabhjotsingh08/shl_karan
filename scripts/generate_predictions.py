@@ -50,11 +50,12 @@ def main() -> int:
     results = []
 
     for query in queries:
-        recommendations = engine.recommend(query)
+        result = engine.recommend(query)
         results.append(
             {
                 args.column: query,
-                "assessments": json.dumps([item.model_dump() for item in recommendations]),
+                "extracted_categories": ", ".join(result.extracted_types),
+                "assessments": json.dumps([item.model_dump() for item in result.recommendations]),
             }
         )
 
